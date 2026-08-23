@@ -360,66 +360,120 @@ Window
   // The web client is fetched over the network at startup, so without this the
   // member sees an empty window for as long as that takes. Sits ABOVE the web
   // view (z 200 > 100) and is removed on the first successful load.
+  // ── Boot splash ──────────────────────────────────────────────────────────
+  // The web client is fetched over the network at startup, so without this the
+  // member stares at an empty window for as long as that takes. Sits ABOVE the
+  // web view (z 200 > 100) and is removed on the first successful load.
   Rectangle
   {
     id: bootSplash
     z: 200
     anchors.fill: parent
-    color: "#080C14"
     visible: true
 
-    Image
-    {
-      id: bootMark
-      source: "qrc:/images/icon.png"
-      width: 108
-      height: 108
+    // The MotionCast floor, with the same corner glows the web aura paints, so
+    // the handoff from splash to app is not a colour change.
+    gradient: Gradient {
+      GradientStop { position: 0.0;  color: "#0A1128" }
+      GradientStop { position: 0.55; color: "#080C14" }
+      GradientStop { position: 1.0;  color: "#060A10" }
+    }
+
+    Rectangle {
       anchors.centerIn: parent
-      anchors.verticalCenterOffset: -28
-      smooth: true
-      fillMode: Image.PreserveAspectFit
-    }
-
-    Text
-    {
-      anchors.horizontalCenter: parent.horizontalCenter
-      anchors.top: bootMark.bottom
-      anchors.topMargin: 26
-      text: "MotionCast"
-      color: "#E0EAF5"
-      font.pixelSize: 19
-      font.letterSpacing: 3
-      font.bold: true
-    }
-
-    Text
-    {
-      id: bootHint
-      anchors.horizontalCenter: parent.horizontalCenter
-      anchors.top: bootMark.bottom
-      anchors.topMargin: 56
-      text: "Connecting"
-      color: "#7C8BA1"
-      font.pixelSize: 13
-      opacity: 0.0
-      SequentialAnimation on opacity {
-        loops: Animation.Infinite
-        running: bootSplash.visible
-        NumberAnimation { to: 1.0; duration: 900; easing.type: Easing.InOutQuad }
-        NumberAnimation { to: 0.35; duration: 900; easing.type: Easing.InOutQuad }
+      width: Math.min(parent.width, parent.height) * 1.1
+      height: width
+      radius: width / 2
+      opacity: 0.5
+      gradient: Gradient {
+        GradientStop { position: 0.0; color: "#122046" }
+        GradientStop { position: 1.0; color: "#00000000" }
       }
     }
 
-    // Only complain if it is genuinely taking too long, so a normal 2-3s load
-    // never shows a scary message.
-    Timer
+    Column
     {
-      interval: 12000
-      running: bootSplash.visible
-      onTriggered: bootHint.text = "Still connecting. Check your internet connection."
+      anchors.centerIn: parent
+      spacing: 22
+
+      Image
+      {
+        id: bootMark
+        source: "qrc:/images/icon.png"
+        width: 96; height: 96
+        anchors.horizontalCenter: parent.horizontalCenter
+        smooth: true
+        mipmap: true
+        fillMode: Image.PreserveAspectFit
+        opacity: 0.0
+        Component.onCompleted: markIn.start()
+        NumberAnimation on opacity { id: markIn; to: 1.0; duration: 420; easing.type: Easing.OutCubic }
+      }
+
+      Text
+      {
+        anchors.horizontalCenter: parent.horizontalCenter
+        text: "MOTIONCAST"
+        color: "#E0EAF5"
+        font.pixelSize: 15
+        font.letterSpacing: 7
+        font.bold: true
+      }
+
+      // Indeterminate progress: a cyan sliver travelling a dim rail. Reads as
+      // "working" without claiming a percentage we cannot know.
+      Rectangle
+      {
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: 190; height: 2
+        radius: 1
+        color: "#16213A"
+        clip: true
+
+        Rectangle
+        {
+          id: bootBar
+          width: 62; height: parent.height
+          radius: 1
+          color: "#00E5FF"
+          x: -width
+          SequentialAnimation on x {
+            loops: Animation.Infinite
+            running: bootSplash.visible
+            NumberAnimation { from: -62; to: 190; duration: 1150; easing.type: Easing.InOutQuad }
+            PauseAnimation { duration: 260 }
+          }
+        }
+      }
+
+      Text
+      {
+        id: bootHint
+        anchors.horizontalCenter: parent.horizontalCenter
+        text: ""
+        color: "#6F7F95"
+        font.pixelSize: 12
+        opacity: 0.0
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+      }
     }
 
-    Behavior on opacity { NumberAnimation { duration: 260 } }
+    // Stay quiet on a normal 2-3s load. Only speak up if it is genuinely slow,
+    // and only then say something actionable.
+    Timer
+    {
+      interval: 6000
+      running: bootSplash.visible
+      onTriggered: { bootHint.text = "Connecting to MotionCast"; bootHint.opacity = 1.0 }
+    }
+    Timer
+    {
+      interval: 15000
+      running: bootSplash.visible
+      onTriggered: { bootHint.text = "Still connecting. Check your internet connection."; bootHint.opacity = 1.0 }
+    }
+
+    Behavior on opacity { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
   }
 
   Text
