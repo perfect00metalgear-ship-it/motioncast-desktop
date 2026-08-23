@@ -1,16 +1,16 @@
-; Jellyfin Desktop Installer Script for Inno Setup
+; MotionCast Installer Script for Inno Setup
 ; Based on WiX configuration from JMP.wxs and Bundle.wxs
 ;
 ; NOTE: Media Feature Pack downloads for Windows N editions are not included in this
 ; Inno Setup version as they require MSU package handling that was specific to WiX Bundle.
 ; Users on Windows N editions will need to install Media Feature Pack manually if needed.
 
-#define MyAppName "Jellyfin Desktop"
+#define MyAppName "@MAIN_NAME@"
 #define MyAppVersion "@VERSION_STRING@"
-#define MyAppPublisher "jellyfin.org"
-#define MyAppURL "https://jellyfin.org"
-#define MyAppExeName "Jellyfin Desktop.exe"
-#define MyAppGUID "{{a78bea4a-5bd0-4aa3-bdf3-579b4f58a921}"
+#define MyAppPublisher "MotionCast"
+#define MyAppURL "https://motioncast.tv"
+#define MyAppExeName "@MAIN_NAME@.exe"
+#define MyAppGUID "{{9fa61ed8-cba7-45e9-a29a-3e92385c8ce1}"
 #define DeployPath "@CMAKE_INSTALL_PREFIX@"
 
 [Setup]
@@ -23,9 +23,9 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-AppComments=Jellyfin desktop client
+AppComments=MotionCast desktop client
 AppContact={#MyAppPublisher}
-DefaultDirName={autopf}\Jellyfin Desktop
+DefaultDirName={autopf}\@MAIN_NAME@
 DisableProgramGroupPage=yes
 ; Require Windows 10 1903 or newer
 MinVersion=10.0.18362
@@ -64,14 +64,14 @@ Source: "{#DeployPath}/redist/*.dll"; DestDir: "{app}"; Flags: ignoreversion; Ch
 Source: "{#DeployPath}/vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall; Check: ShouldExtractVCRedist
 
 [Icons]
-Name: "{autoprograms}\Jellyfin Desktop"; Filename: "{app}\{#MyAppExeName}"; Comment: "Jellyfin desktop client"; WorkingDir: "{app}"
-Name: "{autodesktop}\Jellyfin Desktop"; Filename: "{app}\{#MyAppExeName}"; Comment: "Jellyfin desktop client"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\@MAIN_NAME@"; Filename: "{app}\{#MyAppExeName}"; Comment: "MotionCast desktop client"; WorkingDir: "{app}"
+Name: "{autodesktop}\@MAIN_NAME@"; Filename: "{app}\{#MyAppExeName}"; Comment: "MotionCast desktop client"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 ; Install VCRedist if downloaded
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /passive /norestart"; StatusMsg: "Installing Visual C++ Redistributable..."; Flags: waituntilterminated; Check: ShouldInstallVCRedist
 ; Launch app after install
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch Jellyfin Desktop"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch @MAIN_NAME@"; Flags: nowait postinstall skipifsilent
 
 [Code]
 var
@@ -159,19 +159,19 @@ var
 begin
   if CurUninstallStep = usUninstall then
   begin
-    DataDir := ExpandConstant('{localappdata}\Jellyfin Desktop');
-    CacheDir := ExpandConstant('{localappdata}\cache\Jellyfin Desktop');
+    DataDir := ExpandConstant('{localappdata}\@MAIN_NAME@');
+    CacheDir := ExpandConstant('{localappdata}\cache\@MAIN_NAME@');
 
     if DirExists(DataDir) or DirExists(CacheDir) then
-      RemoveUserData := MsgBox('Do you want to remove your Jellyfin Desktop user data?',
+      RemoveUserData := MsgBox('Do you want to remove your MotionCast user data?',
                                mbConfirmation, MB_YESNO) = IDYES;
   end
   else if CurUninstallStep = usPostUninstall then
   begin
     if RemoveUserData then
     begin
-      DataDir := ExpandConstant('{localappdata}\Jellyfin Desktop');
-      CacheDir := ExpandConstant('{localappdata}\cache\Jellyfin Desktop');
+      DataDir := ExpandConstant('{localappdata}\@MAIN_NAME@');
+      CacheDir := ExpandConstant('{localappdata}\cache\@MAIN_NAME@');
       DelTree(DataDir, True, True, True);
       DelTree(CacheDir, True, True, True);
     end;
