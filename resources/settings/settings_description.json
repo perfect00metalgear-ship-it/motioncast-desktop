@@ -176,6 +176,24 @@
         "default": true
       },
       {
+        "value": "renderLoop",
+        "display_name": "Render Loop",
+        "help": "Windows only. How the UI is presented to the display. 'Basic' renders on the main thread and is the fix for flickering on G-Sync / FreeSync / high-refresh monitors. 'Threaded' is Qt's default. Requires an application restart.",
+        "default": "basic",
+        "possible_values": [
+          ["basic", "Basic (recommended for G-Sync / 144Hz+)"],
+          ["threaded", "Threaded (Qt default)"]
+        ],
+        "platforms": ["windows"]
+      },
+      {
+        "value": "disableGpuVsync",
+        "display_name": "Disable Browser GPU VSync",
+        "help": "Windows only. Stops the embedded browser engine from pacing its own frames against the display, leaving presentation to the app. Try this if the UI still flickers with the Basic render loop. Requires an application restart.",
+        "default": false,
+        "platforms": ["windows"]
+      },
+      {
         "value": "webLayer",
         "display_name": "Composite UI Through A Layer",
         "help": "Windows only. Upstream renders the web interface into an offscreen layer to work around a Linux black-window bug on resume from suspend. On Windows that extra composite can make the UI flicker on variable-refresh (G-Sync / FreeSync) displays and can break transparency so video does not show. Leave this off unless the UI misbehaves. Requires an application restart.",

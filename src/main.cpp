@@ -432,6 +432,32 @@ int main(int argc, char *argv[])
     if (parser.isSet("ignore-certificate-errors"))
       chromiumFlags << "--ignore-certificate-errors";
 
+#ifdef Q_OS_WIN
+    // MotionCast: UI flicker on a variable-refresh / high-Hz display (RTX 4060,
+    // 2560x1440 @ 240 Hz, NVIDIA 591.86; upstream #1202). Two independent levers,
+    // both exposed in Settings so they can be A/B'd without a rebuild:
+    //
+    // 1. Qt Quick render loop. "threaded" (the default) renders on a separate
+    //    thread and swaps against a VRR display whose vblank is not periodic;
+    //    "basic" serialises GUI + render on the main thread -- the documented
+    //    workaround for WebEngine-in-Quick presentation glitches.
+    //    Must be in the environment before the first QQuickWindow exists, i.e.
+    //    here, before QApplication. A value already set in the environment wins.
+    if (qEnvironmentVariableIsEmpty("QSG_RENDER_LOOP"))
+    {
+      QVariant rl = SettingsComponent::readPreinitValue(SETTINGS_SECTION_MAIN, "renderLoop");
+      QString loop = rl.isValid() ? rl.toString() : QStringLiteral("basic");
+      if (loop == "basic" || loop == "threaded")
+        qputenv("QSG_RENDER_LOOP", loop.toUtf8());
+    }
+    // 2. Chromium's own GPU vsync inside QtWebEngine. With the scene graph
+    //    already pacing presentation, a second vsync-paced compositor fighting it
+    //    is a classic flicker source on G-Sync panels.
+    QVariant noVsync = SettingsComponent::readPreinitValue(SETTINGS_SECTION_MAIN, "disableGpuVsync");
+    if (noVsync.isValid() && noVsync.toBool())
+      chromiumFlags << "--disable-gpu-vsync";
+#endif
+
     if (!chromiumFlags.isEmpty())
       qputenv("QTWEBENGINE_CHROMIUM_FLAGS", chromiumFlags.join(" ").toUtf8());
 
