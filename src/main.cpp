@@ -463,6 +463,19 @@ int main(int argc, char *argv[])
     //    budget per frame. Make tiles cheap and plentiful: GPU raster (the
     //    blocklist may deny it for a driver newer than this Chromium), more raster
     //    threads, and a larger GPU tile-memory budget so tiles are not evicted.
+    // 4. ⚠️ THE MOUSE-LEAVES-THE-WINDOW FLICKER. On a dual-PC desk the cursor
+    //    moves to the other machine and Windows reports this window as occluded
+    //    / unfocused. Chromium then THROTTLES the renderer and compositor and
+    //    un-throttles when it thinks the window is visible again -- a cycle that
+    //    shows up as the UI blinking while nothing is being touched. It is
+    //    entirely inside the browser engine, which is why every CSS and Qt-side
+    //    change missed it. CalculateNativeWinOcclusion is the Windows-specific
+    //    occlusion detector behind the worst of it.
+    chromiumFlags << "--disable-features=CalculateNativeWinOcclusion"
+                  << "--disable-backgrounding-occluded-windows"
+                  << "--disable-renderer-backgrounding"
+                  << "--disable-background-timer-throttling";
+
     QVariant gpuRaster = SettingsComponent::readPreinitValue(SETTINGS_SECTION_MAIN, "gpuRaster");
     if (!gpuRaster.isValid() || gpuRaster.toBool())
     {
