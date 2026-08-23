@@ -609,7 +609,7 @@
     "values": [
       {
         "value": "startupurl_desktop",
-        "default": "bundled"
+        "default": "https://motioncast.tv/web/index.html"
       },
       {
         "value": "startupurl_extension",
