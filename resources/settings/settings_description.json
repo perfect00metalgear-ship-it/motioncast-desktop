@@ -176,6 +176,13 @@
         "default": true
       },
       {
+        "value": "webLayer",
+        "display_name": "Composite UI Through A Layer",
+        "help": "Windows only. Upstream renders the web interface into an offscreen layer to work around a Linux black-window bug on resume from suspend. On Windows that extra composite can make the UI flicker on variable-refresh (G-Sync / FreeSync) displays and can break transparency so video does not show. Leave this off unless the UI misbehaves. Requires an application restart.",
+        "default": false,
+        "platforms": ["windows"]
+      },
+      {
         "value": "allowBrowserZoom",
         "display_name": "Allow Browser Zoom",
         "help": "Allows zooming the web interface using Ctrl+Plus/Minus, Ctrl+Scroll, or pinch-to-zoom. Changing this setting requires an application restart for pinch-to-zoom.",

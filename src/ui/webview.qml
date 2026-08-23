@@ -231,9 +231,20 @@ Window
     z: 100
     backgroundColor: "transparent"
 
-    // this is needed to prevent intermittent(?) black screens when unminizing
-    // or resumsing from suspend (linux/{x11/wayland}, possibly others).
-    layer.enabled: true
+    // Upstream sets layer.enabled unconditionally to fix a black window on
+    // un-minimize / resume from suspend -- but its own comment scopes that to
+    // "linux/{x11/wayland}, possibly others" (commit fd31562).
+    //
+    // On Windows the extra offscreen-FBO composite of a TRANSPARENT WebEngineView
+    // is a plausible cause of two reported symptoms: UI flicker on variable-refresh
+    // displays, and mpv video not showing through at all (the layer composites
+    // opaque, so the video plane behind the view is hidden). See upstream #1202.
+    //
+    // Keep upstream behaviour everywhere except Windows, where it defaults off and
+    // stays toggleable via main.webLayer in case this diagnosis is wrong.
+    layer.enabled: components.system.isWindows
+                     ? (components.settings.value("main", "webLayer") === true)
+                     : true
 
     webChannel: webChannelObject
     settings.errorPageEnabled: false
