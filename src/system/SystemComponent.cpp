@@ -198,6 +198,11 @@ void SystemComponent::restart()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void SystemComponent::jsLog(int level, QString text)
 {
+  // MotionCast diag: capture the bridge banner so the debug overlay can prove which
+  // web client build the page actually loaded (cache vs. fresh).
+  if (text.contains("[mc] jellyfin-login-support"))
+    m_mcBridgeLine = text;
+
   switch (level) {
     case 0: // Info
       qInfo() << "JS:" << qPrintable(text);

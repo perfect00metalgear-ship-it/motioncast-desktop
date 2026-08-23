@@ -9,14 +9,16 @@ import Qt.labs.platform as Labs
 Window
 {
   id: mainWindow
-  title: "MotionCast"
+  title: "MotionCast (diagnostic b6)"
   objectName: "mainWindow"
   width: 1280
   height: 720
   minimumWidth: 213
   minimumHeight: 120
   visible: true
-  color: "#000000"
+  // MotionCast DIAGNOSTIC: magenta, not black. Visible ONLY where the page is
+  // transparent AND mpv is not drawing. Black = page opaque. Video = working.
+  color: "#FF0099"
 
   // Properties previously from KonvergoWindow
   property bool webDesktopMode: true
@@ -243,7 +245,7 @@ Window
     // Keep upstream behaviour everywhere except Windows, where it defaults off and
     // stays toggleable via main.webLayer in case this diagnosis is wrong.
     layer.enabled: components.system.isWindows
-                     ? (components.settings.value("main", "webLayer") === true)
+                     ? (components.settings.value("main", "webLayer") !== false)
                      : true
 
     webChannel: webChannelObject

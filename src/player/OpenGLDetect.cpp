@@ -76,26 +76,9 @@ void detectOpenGLLate()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void detectOpenGLEarly()
 {
-  // MotionCast: pin an explicit swap interval on Windows.
-  //
-  // Upstream leaves this function empty, so the GL surface inherits whatever the
-  // driver decides. Combined with the unconditional
-  // QQuickWindow::setGraphicsApi(OpenGL) in main.cpp and Qt's threaded render loop,
-  // that produces erratic present timing on variable-refresh (G-Sync / FreeSync)
-  // displays -- the UI flickers. Reported upstream and unfixed:
-  // https://github.com/jellyfin/jellyfin-desktop/issues/1202  (open since 2026-03)
-  // https://github.com/jellyfin/jellyfin-desktop/issues/1112
-  //
-  // We CANNOT fix this by moving to the D3D11 RHI backend: mpvqt's MpvAbstractItem
-  // derives from QQuickFramebufferObject and its renderer uses
-  // QOpenGLFramebufferObject, both OpenGL-only. Dropping OpenGL kills video output.
-  // So we keep OpenGL and make the presentation deterministic instead.
-  //
-  // setSwapInterval(1) = wait for one vertical blank per frame. This is the same
-  // shape as the macOS branch above, which already configures the default format.
-  QSurfaceFormat format = QSurfaceFormat::defaultFormat();
-  format.setSwapInterval(1);
-  QSurfaceFormat::setDefaultFormat(format);
+  // MotionCast: intentionally identical to upstream. A setSwapInterval(1) was
+  // tried here (b3-b5) for VRR flicker and verified NOT to help; removed so the
+  // GL surface setup stays byte-for-byte upstream while we diagnose.
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

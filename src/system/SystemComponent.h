@@ -23,6 +23,7 @@ class SystemComponent : public ComponentBase
   DEFINE_SINGLETON(SystemComponent);
 
 public:
+  QString mcBridgeLine() const { return m_mcBridgeLine; }
   Q_PROPERTY(bool isMacos READ platformIsMac CONSTANT)
   Q_PROPERTY(bool isWindows READ platformIsWindows CONSTANT)
   Q_PROPERTY(bool isLinux READ platformIsLinux CONSTANT)
@@ -135,6 +136,7 @@ private:
   bool m_doLogMessages;
   QString m_authenticationToken;
   QString m_webClientVersion;
+  QString m_mcBridgeLine;   // MotionCast diag: last "[mc] jellyfin-login-support vNNN" console line
   qreal m_scale;
   QNetworkReply* m_connectivityCheckReply;
   QNetworkReply* m_resolveUrlReply;

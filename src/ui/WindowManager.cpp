@@ -158,6 +158,14 @@ void WindowManager::initializeWindow(QQuickWindow* window)
   connect(m_window, &QQuickWindow::beforeSynchronizing, this, &WindowManager::updateOpenGLInfo, static_cast<Qt::ConnectionType>(Qt::DirectConnection|Qt::SingleShotConnection));
 
   QQmlProperty(m_window, "showDebugLayer").connectNotifySignal(this, SLOT(onShowDebugLayerChanged()));
+
+  // MotionCast DIAGNOSTIC BUILD: pop the debug overlay the moment playback starts,
+  // so a plain screenshot carries the GL renderer + mpv state + bridge version.
+  // The overlay sits BELOW the web view (z 10 < 100): if the page is opaque it is
+  // invisible, which is itself the answer.
+  connect(&PlayerComponent::Get(), &PlayerComponent::playing, this, [this]() {
+    m_window->setProperty("showDebugLayer", true);
+  });
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -915,6 +923,8 @@ void WindowManager::updateDebugInfo()
   }
   info << "\n";
   debugInfo += infoString;
+
+  debugInfo += "\nMotionCast bridge: " + SystemComponent::Get().mcBridgeLine() + "\n";
 
   m_window->setProperty("debugInfo", debugInfo);
   m_window->setProperty("videoInfo", PlayerComponent::Get().videoInformation());
