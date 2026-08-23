@@ -357,123 +357,137 @@ Window
   }
 
   // ── Boot splash ──────────────────────────────────────────────────────────
-  // The web client is fetched over the network at startup, so without this the
-  // member sees an empty window for as long as that takes. Sits ABOVE the web
-  // view (z 200 > 100) and is removed on the first successful load.
-  // ── Boot splash ──────────────────────────────────────────────────────────
-  // The web client is fetched over the network at startup, so without this the
-  // member stares at an empty window for as long as that takes. Sits ABOVE the
-  // web view (z 200 > 100) and is removed on the first successful load.
+  // ⚠️ This is a DELIBERATE COPY of the web client's #mc-loader (index.html):
+  // same floor + corner glows, same blurred cyan->magenta orb behind the mark,
+  // same spaced wordmark, same rotating tagline, same thin progress rail.
+  // The app shows this while the web client is still downloading, and the web
+  // loader takes over the instant it paints -- if the two do not match, the
+  // member sees a jarring swap between two different loading screens. They do
+  // not need to know two screens exist. Keep them in sync.
   Rectangle
   {
     id: bootSplash
     z: 200
     anchors.fill: parent
     visible: true
+    color: "#080C14"
 
-    // The MotionCast floor, with the same corner glows the web aura paints, so
-    // the handoff from splash to app is not a colour change.
-    gradient: Gradient {
-      GradientStop { position: 0.0;  color: "#0A1128" }
-      GradientStop { position: 0.55; color: "#080C14" }
-      GradientStop { position: 1.0;  color: "#060A10" }
-    }
-
+    // radial-gradient(ellipse at 50% 50%, #0A1128, #060A10)
     Rectangle {
-      anchors.centerIn: parent
-      width: Math.min(parent.width, parent.height) * 1.1
-      height: width
-      radius: width / 2
-      opacity: 0.5
+      anchors.fill: parent
       gradient: Gradient {
-        GradientStop { position: 0.0; color: "#122046" }
-        GradientStop { position: 1.0; color: "#00000000" }
+        GradientStop { position: 0.0; color: "#0A1128" }
+        GradientStop { position: 1.0; color: "#060A10" }
       }
+      opacity: 0.9
+    }
+    // corner glows: cyan bottom-left, magenta top-right
+    Rectangle {
+      width: parent.width * 1.1; height: parent.height * 1.6
+      x: -parent.width * 0.28; y: parent.height * 0.10
+      radius: width / 2
+      opacity: 0.14
+      gradient: Gradient { GradientStop { position: 0.0; color: "#00E5FF" }
+                           GradientStop { position: 1.0; color: "#00000000" } }
+    }
+    Rectangle {
+      width: parent.width * 1.1; height: parent.height * 1.6
+      x: parent.width * 0.18; y: -parent.height * 0.70
+      radius: width / 2
+      opacity: 0.11
+      gradient: Gradient { GradientStop { position: 0.0; color: "#FF0099" }
+                           GradientStop { position: 1.0; color: "#00000000" } }
     }
 
     Column
     {
       anchors.centerIn: parent
-      spacing: 22
+      spacing: 10
 
-      Image
+      Item
       {
-        id: bootMark
-        source: "qrc:/images/icon.png"
-        width: 96; height: 96
+        id: markHost
+        width: 200; height: 200
         anchors.horizontalCenter: parent.horizontalCenter
-        smooth: true
-        mipmap: true
-        fillMode: Image.PreserveAspectFit
-        opacity: 0.0
-        Component.onCompleted: markIn.start()
-        NumberAnimation on opacity { id: markIn; to: 1.0; duration: 420; easing.type: Easing.OutCubic }
-      }
 
-      Text
-      {
-        anchors.horizontalCenter: parent.horizontalCenter
-        text: "MOTIONCAST"
-        color: "#E0EAF5"
-        font.pixelSize: 15
-        font.letterSpacing: 7
-        font.bold: true
-      }
-
-      // Indeterminate progress: a cyan sliver travelling a dim rail. Reads as
-      // "working" without claiming a percentage we cannot know.
-      Rectangle
-      {
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: 190; height: 2
-        radius: 1
-        color: "#16213A"
-        clip: true
-
-        Rectangle
-        {
-          id: bootBar
-          width: 62; height: parent.height
-          radius: 1
-          color: "#00E5FF"
-          x: -width
-          SequentialAnimation on x {
-            loops: Animation.Infinite
-            running: bootSplash.visible
-            NumberAnimation { from: -62; to: 190; duration: 1150; easing.type: Easing.InOutQuad }
-            PauseAnimation { duration: 260 }
+        // #mc-loader-orb: blurred cyan->magenta bloom behind the mark
+        Rectangle {
+          anchors.fill: parent
+          anchors.margins: 18
+          radius: width / 2
+          opacity: 0.55
+          gradient: Gradient { GradientStop { position: 0.0; color: "#00E5FF" }
+                               GradientStop { position: 1.0; color: "#FF00FF" } }
+          SequentialAnimation on opacity {
+            loops: Animation.Infinite; running: bootSplash.visible
+            NumberAnimation { to: 0.75; duration: 1100; easing.type: Easing.InOutSine }
+            NumberAnimation { to: 0.45; duration: 1100; easing.type: Easing.InOutSine }
           }
+        }
+
+        Image {
+          source: "qrc:/images/icon.png"
+          anchors.centerIn: parent
+          width: 140; height: 140
+          smooth: true; mipmap: true
+          fillMode: Image.PreserveAspectFit
         }
       }
 
-      Text
-      {
-        id: bootHint
+      Text {
         anchors.horizontalCenter: parent.horizontalCenter
-        text: ""
-        color: "#6F7F95"
-        font.pixelSize: 12
-        opacity: 0.0
-        Behavior on opacity { NumberAnimation { duration: 300 } }
+        text: "MOTIONCAST"
+        color: "#E8EEF4"
+        font.pixelSize: 13
+        font.letterSpacing: 5.5
+        font.weight: Font.DemiBold
+      }
+
+      // Same rotating copy as the web loader, so the handoff reads as one screen.
+      Text {
+        id: bootLine
+        anchors.horizontalCenter: parent.horizontalCenter
+        color: "#6C7886"
+        font.pixelSize: 13
+        horizontalAlignment: Text.AlignHCenter
+        property var lines: [
+          "Polishing the library\u2026", "Cueing up tonight\u2019s picks\u2026",
+          "Counting your saves\u2026", "Stacking the shelves\u2026",
+          "Warming the projector\u2026", "Dusting off the deep cuts\u2026",
+          "Tuning the cyan glow\u2026", "Tightening the queue\u2026"
+        ]
+        property int idx: 0
+        text: lines[idx]
+        Behavior on opacity { NumberAnimation { duration: 350 } }
+        Timer {
+          interval: 2600; running: bootSplash.visible; repeat: true
+          onTriggered: { bootLine.opacity = 0; lineSwap.start() }
+        }
+        Timer {
+          id: lineSwap; interval: 360
+          onTriggered: { bootLine.idx = (bootLine.idx + 1) % bootLine.lines.length; bootLine.opacity = 1 }
+        }
+      }
+
+      // #mc-loader-bar
+      Rectangle {
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: 132; height: 2; radius: 2
+        color: "#22283A"
+        clip: true
+        Rectangle {
+          width: parent.width * 0.42; height: parent.height; radius: 2
+          color: "#00E5FF"
+          x: -width
+          SequentialAnimation on x {
+            loops: Animation.Infinite; running: bootSplash.visible
+            NumberAnimation { from: -55; to: 132; duration: 1250; easing.type: Easing.InOutQuad }
+          }
+        }
       }
     }
 
-    // Stay quiet on a normal 2-3s load. Only speak up if it is genuinely slow,
-    // and only then say something actionable.
-    Timer
-    {
-      interval: 6000
-      running: bootSplash.visible
-      onTriggered: { bootHint.text = "Connecting to MotionCast"; bootHint.opacity = 1.0 }
-    }
-    Timer
-    {
-      interval: 15000
-      running: bootSplash.visible
-      onTriggered: { bootHint.text = "Still connecting. Check your internet connection."; bootHint.opacity = 1.0 }
-    }
-
-    Behavior on opacity { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
   }
 
   Text
