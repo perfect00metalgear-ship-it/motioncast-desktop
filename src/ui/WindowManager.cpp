@@ -159,13 +159,6 @@ void WindowManager::initializeWindow(QQuickWindow* window)
 
   QQmlProperty(m_window, "showDebugLayer").connectNotifySignal(this, SLOT(onShowDebugLayerChanged()));
 
-  // MotionCast DIAGNOSTIC BUILD: pop the debug overlay the moment playback starts,
-  // so a plain screenshot carries the GL renderer + mpv state + bridge version.
-  // The overlay sits BELOW the web view (z 10 < 100): if the page is opaque it is
-  // invisible, which is itself the answer.
-  connect(&PlayerComponent::Get(), &PlayerComponent::playing, this, [this]() {
-    m_window->setProperty("showDebugLayer", true);
-  });
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

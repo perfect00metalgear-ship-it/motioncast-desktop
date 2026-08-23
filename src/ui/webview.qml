@@ -9,16 +9,14 @@ import Qt.labs.platform as Labs
 Window
 {
   id: mainWindow
-  title: "MotionCast (diagnostic b6)"
+  title: "MotionCast"
   objectName: "mainWindow"
   width: 1280
   height: 720
   minimumWidth: 213
   minimumHeight: 120
   visible: true
-  // MotionCast DIAGNOSTIC: magenta, not black. Visible ONLY where the page is
-  // transparent AND mpv is not drawing. Black = page opaque. Video = working.
-  color: "#FF0099"
+  color: "#000000"
 
   // Properties previously from KonvergoWindow
   property bool webDesktopMode: true
