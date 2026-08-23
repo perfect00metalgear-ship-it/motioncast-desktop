@@ -119,8 +119,9 @@
       },
       {
         "value": "sdlEnabled",
-        "default": true,
-        "hidden": true
+        "display_name": "Gamepad Input (SDL)",
+        "help": "Enables gamepad/joystick control of the interface. Turn this OFF if the interface flickers when USB devices are attached or detached -- for example when a KVM switch hands your mouse and keyboard to another PC. SDL re-enumerates DirectInput devices on every USB change, and that enumeration can stall. Requires an application restart.",
+        "default": false
       },
       {
         "value": "checkForUpdates",

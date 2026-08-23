@@ -464,7 +464,9 @@ QString SystemComponent::debugInformation()
 
   stream << "Files\n";
   stream << "  Log file: " << ProfileManager::activeProfile().logDir() + "/" + Names::DataName() + ".log" << "\n";
-  stream << "  Config file: " << ProfileManager::activeProfile().dataDir(Names::DataName() + ".conf") << "\n";
+  // ⚠️ The filename is HARDCODED in SettingsComponent (jellyfin-desktop.conf); do not
+  // derive it from DataName() here or the overlay reports a file that does not exist.
+  stream << "  Config file: " << ProfileManager::activeProfile().dataDir("jellyfin-desktop.conf") << "\n";
   stream << "\n";
 
   stream << "Network Addresses\n";
