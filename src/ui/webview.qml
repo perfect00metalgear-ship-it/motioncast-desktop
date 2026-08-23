@@ -335,6 +335,23 @@ Window
       }
     }
 
+    // ⚠️ Handle the file picker OURSELVES. QtWebEngine's fallback dialog lives in
+    // separate delegate QML that windeployqt does not reliably bundle, so an
+    // unhandled fileDialogRequested means the picker simply never appears --
+    // the member clicks "Upload your own" and nothing happens, with no error.
+    // Qt.labs.platform gives us the real native dialog.
+    onFileDialogRequested: function(request)
+    {
+      if (request.mode !== FileDialogRequest.FileModeOpen
+          && request.mode !== FileDialogRequest.FileModeOpenMultiple)
+        return;   // save/upload-folder modes keep the default behaviour
+      request.accepted = true
+      mcFilePicker.pendingRequest = request
+      mcFilePicker.fileMode = (request.mode === FileDialogRequest.FileModeOpenMultiple)
+        ? Labs.FileDialog.OpenFiles : Labs.FileDialog.OpenFile
+      mcFilePicker.open()
+    }
+
     onFullScreenRequested:
     {
       console.log("Request fullscreen: " + request.toggleOn)
@@ -575,6 +592,24 @@ Window
   }
 
   property QtObject webChannel: web.webChannel
+
+  Labs.FileDialog {
+    id: mcFilePicker
+    property var pendingRequest: null
+    title: qsTr("Choose an image")
+    onAccepted: {
+      if (pendingRequest) {
+        var paths = []
+        for (var i = 0; i < files.length; i++) paths.push(files[i].toString().replace("file:///", ""))
+        if (paths.length === 0 && file) paths.push(file.toString().replace("file:///", ""))
+        pendingRequest.dialogAccept(paths)
+        pendingRequest = null
+      }
+    }
+    onRejected: {
+      if (pendingRequest) { pendingRequest.dialogReject(); pendingRequest = null }
+    }
+  }
 
   Labs.SystemTrayIcon {
     visible: showSystemTrayIcon
