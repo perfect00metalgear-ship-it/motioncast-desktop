@@ -456,6 +456,21 @@ int main(int argc, char *argv[])
     QVariant noVsync = SettingsComponent::readPreinitValue(SETTINGS_SECTION_MAIN, "disableGpuVsync");
     if (noVsync.isValid() && noVsync.toBool())
       chromiumFlags << "--disable-gpu-vsync";
+    // 3. Rasterization. A screen recording (2026-08-23) showed the flicker is a
+    //    single frame in which the page CONTENT layer is missing while the fixed
+    //    background layer is present: Chromium presented a frame before the
+    //    content tiles were rasterized. At 2560x1440 @ 240 Hz that is a ~4 ms
+    //    budget per frame. Make tiles cheap and plentiful: GPU raster (the
+    //    blocklist may deny it for a driver newer than this Chromium), more raster
+    //    threads, and a larger GPU tile-memory budget so tiles are not evicted.
+    QVariant gpuRaster = SettingsComponent::readPreinitValue(SETTINGS_SECTION_MAIN, "gpuRaster");
+    if (!gpuRaster.isValid() || gpuRaster.toBool())
+    {
+      chromiumFlags << "--enable-gpu-rasterization"
+                    << "--ignore-gpu-blocklist"
+                    << "--num-raster-threads=4"
+                    << "--force-gpu-mem-available-mb=2048";
+    }
 #endif
 
     if (!chromiumFlags.isEmpty())

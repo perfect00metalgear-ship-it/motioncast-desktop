@@ -194,6 +194,13 @@
         "platforms": ["windows"]
       },
       {
+        "value": "gpuRaster",
+        "display_name": "GPU Rasterization",
+        "help": "Windows only. Rasterize the interface on the GPU with extra raster threads and a larger tile budget. Fixes the interface blinking on high-resolution, high-refresh displays where frames were being shown before the page finished drawing. Requires an application restart.",
+        "default": true,
+        "platforms": ["windows"]
+      },
+      {
         "value": "webLayer",
         "display_name": "Composite UI Through A Layer",
         "help": "Windows only. Upstream renders the web interface into an offscreen layer to work around a Linux black-window bug on resume from suspend. On Windows that extra composite can make the UI flicker on variable-refresh (G-Sync / FreeSync) displays and can break transparency so video does not show. Leave this off unless the UI misbehaves. Requires an application restart.",
