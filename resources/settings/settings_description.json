@@ -127,7 +127,7 @@
         "value": "checkForUpdates",
         "display_name": "Check For Updates",
         "help": "Allows user to disable update check plugin script.",
-        "default": true
+        "default": false
       },
       {
         "value": "enableInputRepeat",

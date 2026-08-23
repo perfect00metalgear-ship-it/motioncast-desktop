@@ -85,6 +85,14 @@ jobs:
         # Also grab VCRedist installer for optional system-wide install
         Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile deps/vc_redist.x64.exe
       shell: powershell
+    - name: Stamp build number into VERSION
+      # The update nudge in the web client compares 2.0.<build> against the build
+      # parsed from the published filename, so every build needs a unique,
+      # ordered version. Without this every build reports 2.0.0-dev and no member
+      # is ever told an update exists.
+      run: echo 2.0.${{ github.run_number }}> VERSION
+      shell: cmd
+
     - name: Build
       run: |
         set "VS_PATH="

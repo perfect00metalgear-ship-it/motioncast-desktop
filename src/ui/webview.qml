@@ -16,7 +16,9 @@ Window
   minimumWidth: 213
   minimumHeight: 120
   visible: true
-  color: "#000000"
+  // MotionCast floor, not black: this is what the member stares at while the
+  // web client loads over the network, so it should look like the app.
+  color: "#080C14"
 
   // Properties previously from KonvergoWindow
   property bool webDesktopMode: true
@@ -190,6 +192,13 @@ Window
     onTriggered: web.zoomFactor = 1.0
   }
 
+  Timer
+  {
+    id: splashFade
+    interval: 300
+    onTriggered: bootSplash.visible = false
+  }
+
   WebChannel
   {
     id: webChannelObject
@@ -302,10 +311,13 @@ Window
       else if (loadingInfo.status == WebEngineView.LoadSucceededStatus)
       {
         console.log("WebEngineLoadRequest success: " + loadingInfo.url);
+        bootSplash.opacity = 0.0
+        splashFade.start()
       }
       else if (loadingInfo.status == WebEngineView.LoadFailedStatus)
       {
         console.log("WebEngineLoadRequest failure: " + loadingInfo.url + " error code: " + loadingInfo.errorCode);
+        bootSplash.visible = false
         errorLabel.visible = true
         errorLabel.text = "Error loading client, this is bad and should not happen<br>" +
                           "You can try to <a href='reload'>reload</a> or head to our <a href='http://jellyfin.org'>support page</a><br><br>Actual Error: <pre>" +
@@ -342,6 +354,72 @@ Window
         error.acceptCertificate()
       }
     }
+  }
+
+  // ── Boot splash ──────────────────────────────────────────────────────────
+  // The web client is fetched over the network at startup, so without this the
+  // member sees an empty window for as long as that takes. Sits ABOVE the web
+  // view (z 200 > 100) and is removed on the first successful load.
+  Rectangle
+  {
+    id: bootSplash
+    z: 200
+    anchors.fill: parent
+    color: "#080C14"
+    visible: true
+
+    Image
+    {
+      id: bootMark
+      source: "qrc:/images/icon.png"
+      width: 108
+      height: 108
+      anchors.centerIn: parent
+      anchors.verticalCenterOffset: -28
+      smooth: true
+      fillMode: Image.PreserveAspectFit
+    }
+
+    Text
+    {
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: bootMark.bottom
+      anchors.topMargin: 26
+      text: "MotionCast"
+      color: "#E0EAF5"
+      font.pixelSize: 19
+      font.letterSpacing: 3
+      font.bold: true
+    }
+
+    Text
+    {
+      id: bootHint
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: bootMark.bottom
+      anchors.topMargin: 56
+      text: "Connecting"
+      color: "#7C8BA1"
+      font.pixelSize: 13
+      opacity: 0.0
+      SequentialAnimation on opacity {
+        loops: Animation.Infinite
+        running: bootSplash.visible
+        NumberAnimation { to: 1.0; duration: 900; easing.type: Easing.InOutQuad }
+        NumberAnimation { to: 0.35; duration: 900; easing.type: Easing.InOutQuad }
+      }
+    }
+
+    // Only complain if it is genuinely taking too long, so a normal 2-3s load
+    // never shows a scary message.
+    Timer
+    {
+      interval: 12000
+      running: bootSplash.visible
+      onTriggered: bootHint.text = "Still connecting. Check your internet connection."
+    }
+
+    Behavior on opacity { NumberAnimation { duration: 260 } }
   }
 
   Text
