@@ -16,8 +16,13 @@ Window
   minimumWidth: 213
   minimumHeight: 120
   visible: true
-  // MotionCast floor, not black: this is what the member stares at while the
-  // web client loads over the network, so it should look like the app.
+  // ⚠️ MotionCast floor, NOT black, and NOT a native splash.
+  // index.html carries its own branded loader (#mc-loader) inline, so it paints
+  // as soon as the HTML arrives -- roughly TTFB plus a parse. A native splash
+  // here sat ON TOP of that (z 200) and only cleared on the full load event, so
+  // it hid the real animation for the entire load and the member saw the worse
+  // of the two screens. This colour just prevents a black flash in the gap
+  // before the HTML paints. Do not add a splash back.
   color: "#080C14"
 
   // Properties previously from KonvergoWindow
@@ -192,13 +197,6 @@ Window
     onTriggered: web.zoomFactor = 1.0
   }
 
-  Timer
-  {
-    id: splashFade
-    interval: 300
-    onTriggered: bootSplash.visible = false
-  }
-
   WebChannel
   {
     id: webChannelObject
@@ -311,13 +309,10 @@ Window
       else if (loadingInfo.status == WebEngineView.LoadSucceededStatus)
       {
         console.log("WebEngineLoadRequest success: " + loadingInfo.url);
-        bootSplash.opacity = 0.0
-        splashFade.start()
       }
       else if (loadingInfo.status == WebEngineView.LoadFailedStatus)
       {
         console.log("WebEngineLoadRequest failure: " + loadingInfo.url + " error code: " + loadingInfo.errorCode);
-        bootSplash.visible = false
         errorLabel.visible = true
         errorLabel.text = "Error loading client, this is bad and should not happen<br>" +
                           "You can try to <a href='reload'>reload</a> or head to our <a href='http://jellyfin.org'>support page</a><br><br>Actual Error: <pre>" +
@@ -371,140 +366,6 @@ Window
         error.acceptCertificate()
       }
     }
-  }
-
-  // ── Boot splash ──────────────────────────────────────────────────────────
-  // ⚠️ This is a DELIBERATE COPY of the web client's #mc-loader (index.html):
-  // same floor + corner glows, same blurred cyan->magenta orb behind the mark,
-  // same spaced wordmark, same rotating tagline, same thin progress rail.
-  // The app shows this while the web client is still downloading, and the web
-  // loader takes over the instant it paints -- if the two do not match, the
-  // member sees a jarring swap between two different loading screens. They do
-  // not need to know two screens exist. Keep them in sync.
-  Rectangle
-  {
-    id: bootSplash
-    z: 200
-    anchors.fill: parent
-    visible: true
-    color: "#080C14"
-
-    // radial-gradient(ellipse at 50% 50%, #0A1128, #060A10)
-    Rectangle {
-      anchors.fill: parent
-      gradient: Gradient {
-        GradientStop { position: 0.0; color: "#0A1128" }
-        GradientStop { position: 1.0; color: "#060A10" }
-      }
-      opacity: 0.9
-    }
-    // corner glows: cyan bottom-left, magenta top-right
-    Rectangle {
-      width: parent.width * 1.1; height: parent.height * 1.6
-      x: -parent.width * 0.28; y: parent.height * 0.10
-      radius: width / 2
-      opacity: 0.14
-      gradient: Gradient { GradientStop { position: 0.0; color: "#00E5FF" }
-                           GradientStop { position: 1.0; color: "#00000000" } }
-    }
-    Rectangle {
-      width: parent.width * 1.1; height: parent.height * 1.6
-      x: parent.width * 0.18; y: -parent.height * 0.70
-      radius: width / 2
-      opacity: 0.11
-      gradient: Gradient { GradientStop { position: 0.0; color: "#FF0099" }
-                           GradientStop { position: 1.0; color: "#00000000" } }
-    }
-
-    Column
-    {
-      anchors.centerIn: parent
-      spacing: 10
-
-      Item
-      {
-        id: markHost
-        width: 200; height: 200
-        anchors.horizontalCenter: parent.horizontalCenter
-
-        // #mc-loader-orb: blurred cyan->magenta bloom behind the mark
-        Rectangle {
-          anchors.fill: parent
-          anchors.margins: 18
-          radius: width / 2
-          opacity: 0.55
-          gradient: Gradient { GradientStop { position: 0.0; color: "#00E5FF" }
-                               GradientStop { position: 1.0; color: "#FF00FF" } }
-          SequentialAnimation on opacity {
-            loops: Animation.Infinite; running: bootSplash.visible
-            NumberAnimation { to: 0.75; duration: 1100; easing.type: Easing.InOutSine }
-            NumberAnimation { to: 0.45; duration: 1100; easing.type: Easing.InOutSine }
-          }
-        }
-
-        Image {
-          source: "qrc:/images/icon.png"
-          anchors.centerIn: parent
-          width: 140; height: 140
-          smooth: true; mipmap: true
-          fillMode: Image.PreserveAspectFit
-        }
-      }
-
-      Text {
-        anchors.horizontalCenter: parent.horizontalCenter
-        text: "MOTIONCAST"
-        color: "#E8EEF4"
-        font.pixelSize: 13
-        font.letterSpacing: 5.5
-        font.weight: Font.DemiBold
-      }
-
-      // Same rotating copy as the web loader, so the handoff reads as one screen.
-      Text {
-        id: bootLine
-        anchors.horizontalCenter: parent.horizontalCenter
-        color: "#6C7886"
-        font.pixelSize: 13
-        horizontalAlignment: Text.AlignHCenter
-        property var lines: [
-          "Polishing the library\u2026", "Cueing up tonight\u2019s picks\u2026",
-          "Counting your saves\u2026", "Stacking the shelves\u2026",
-          "Warming the projector\u2026", "Dusting off the deep cuts\u2026",
-          "Tuning the cyan glow\u2026", "Tightening the queue\u2026"
-        ]
-        property int idx: 0
-        text: lines[idx]
-        Behavior on opacity { NumberAnimation { duration: 350 } }
-        Timer {
-          interval: 2600; running: bootSplash.visible; repeat: true
-          onTriggered: { bootLine.opacity = 0; lineSwap.start() }
-        }
-        Timer {
-          id: lineSwap; interval: 360
-          onTriggered: { bootLine.idx = (bootLine.idx + 1) % bootLine.lines.length; bootLine.opacity = 1 }
-        }
-      }
-
-      // #mc-loader-bar
-      Rectangle {
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: 132; height: 2; radius: 2
-        color: "#22283A"
-        clip: true
-        Rectangle {
-          width: parent.width * 0.42; height: parent.height; radius: 2
-          color: "#00E5FF"
-          x: -width
-          SequentialAnimation on x {
-            loops: Animation.Infinite; running: bootSplash.visible
-            NumberAnimation { from: -55; to: 132; duration: 1250; easing.type: Easing.InOutQuad }
-          }
-        }
-      }
-    }
-
-    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
   }
 
   Text
